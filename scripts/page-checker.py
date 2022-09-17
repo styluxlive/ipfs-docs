@@ -24,26 +24,32 @@ strippedText = pageText.strip().encode('utf-8')
 
 # check links
 
-outputHeader = '### `' + markdownToTest + '`:'
+outputHeader = f'### `{markdownToTest}`:'
 outputText = ""
 links = soup.find_all('a')
 checkedLinks = ''
 for link in links:
     linkUrl = link['href'].split('#')[0]
-    if ("http" in linkUrl and
-    "docs.ipfs.tech" not in linkUrl and
-    "https://github.com/ipfs/ipfs-docs" not in linkUrl and
-    (linkUrl + "|") not in checkedLinks):
+    if (
+        "http" in linkUrl
+        and "docs.ipfs.tech" not in linkUrl
+        and "https://github.com/ipfs/ipfs-docs" not in linkUrl
+        and f"{linkUrl}|" not in checkedLinks
+    ):
         #print(linkUrl)
-        checkedLinks += linkUrl + "|"
+        checkedLinks += f"{linkUrl}|"
         try:
             r = requests.head(linkUrl)
             if (r.status_code != 200):
-                outputText += "- The following link returned HTTP status code " + str(r.status_code) + " (" + http.client.responses[r.status_code] + "):\n"
-                outputText += "  " + linkUrl + "\n"
+                outputText += (
+                    f"- The following link returned HTTP status code {str(r.status_code)} ({http.client.responses[r.status_code]}"
+                    + "):\n"
+                )
+
+                outputText += f"  {linkUrl}" + "\n"
         except requests.ConnectionError:
             outputText += "- The following link failed to connect:" + "\n"
-            outputText += "  " + linkUrl + "\n"
+            outputText += f"  {linkUrl}" + "\n"
 
 URL = "https://api.languagetoolplus.com/v2/check"
 
@@ -70,16 +76,14 @@ for match in data['matches']:
         outputText += "  " + match['context']['text'][:79] + "...\n"
     else:
         outputText += "  " + match['context']['text'] + "\n"
-    contextString = ''
-    for i in range(match['context']['offset']):
-        contextString += ' '
-    for i in range(match['context']['length']):
+    contextString = ''.join(' ' for _ in range(match['context']['offset']))
+    for _ in range(match['context']['length']):
         contextString += '^'
-    outputText += "  " + contextString + "\n"
+    outputText += f"  {contextString}" + "\n"
     outputText += "  ```" + "\n"
 
 if (len(outputText) > 0):
     print(outputHeader)
     print(outputText)
 else:
-    print('- Check of `'+ markdownToTest +'` came back clean!')
+    print(f'- Check of `{markdownToTest}` came back clean!')
